@@ -1,0 +1,17 @@
+// ------------------------------------------------------------------
+// Layout
+// ------------------------------------------------------------------
+
+.o_FormRenderer_chatterContainer.o-aside {
+    border-left: $border-width solid;
+    padding: map-get($spacers, 0);
+    width: $o-chatter-min-width;
+}
+
+// ------------------------------------------------------------------
+// Style
+// ------------------------------------------------------------------
+
+.o_FormRenderer_chatterContainer.o-aside {
+    border-left-color: $border-color;
+}

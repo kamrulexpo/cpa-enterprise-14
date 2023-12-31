@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+
+<!-- Owl Templates -->
+
+<t t-name="HomeMenu" owl="1">
+    <div class="o_home_menu" t-att-class="{ o_search_hidden: !state.isSearching }">
+        <div class="o_menu_search">
+            <span class="fa fa-search o_menu_search_icon" role="img" aria-label="Search" title="Search"/>
+            <input t-ref="input" type="text" placeholder="Search..." class="o_menu_search_input" t-on-input="_onInputSearch"/>
+        </div>
+        <div class="o_home_menu_scrollable" t-ref="mainContent">
+            <div t-if="displayedApps.length" class="o_apps">
+                <a t-foreach="displayedApps" t-as="app"
+                    class="o_app o_menuitem"
+                    t-att-class="{o_focused: appIndex === app_index}"
+                    t-att-data-menu-xmlid="app.xmlid"
+                    t-att-href="app.href || ('#menu_id='+app.id+'&amp;action_id='+app.action)"
+                    t-key="app.id"
+                    t-on-click.prevent="_onAppClick(app)"
+                    >
+                    <div t-if="app.webIconData" class="o_app_icon"
+                        t-attf-style="background-image: url('{{app.webIconData}}');"
+                    />
+                    <div t-else="" class="o_app_icon"
+                        t-attf-style="background-color: {{app.webIcon.backgroundColor}};"
+                        >
+                        <i t-att-class="app.webIcon.iconClass" t-attf-style="color: {{app.webIcon.color}};"/>
+                    </div>
+                    <div class="o_caption" t-esc="app.label"/>
+                </a>
+            </div>
+            <div t-if="displayedMenuItems.length" class="o_menuitems">
+                <a t-foreach="displayedMenuItems" t-as="menu"
+                    role="menuitem"
+                    class="o_menuitem"
+                    t-att-class="{o_focused: menuIndex === menu_index}"
+                    t-att-href="menu.href ? menu.href : ('#menu_id='+menu.id+'&amp;action_id='+menu.action)"
+                    t-key="menu.id"
+                    t-on-click.prevent="_onMenuitemClick(menu)"
+                    >
+                    <span class="o_menuitem_parents"><t t-esc="menu.parents"/> / </span>
+                    <t t-esc="menu.label"/>
+                </a>
+            </div>
+            <div t-elif="!displayedApps.length" class="o_no_result" role="alert">
+                No result
+            </div>
+        </div>
+    </div>
+</t>
+
+<t t-name="HomeMenuWrapper" owl="1">
+    <HomeMenu apps="state.apps" menuItems="state.menuItems" t-att-style="state.style" t-on-scroll="_onScroll"/>
+</t>
+
+<!-- Legacy Templates -->
+
+<header t-name="Menu">
+    <nav class="o_main_navbar">
+        <a href="#" class="fa fa-th o_menu_toggle" title="Applications" aria-label="Applications" accesskey="h"/>
+        <button type="button" class="fa fa-bars float-right d-block d-md-none o_mobile_menu_toggle" title="Toggle menu" aria-label="Toggle menu"/>
+
+        <a href="#" class="o_menu_brand" role="button" />
+        <ul class="o_menu_sections" role="menu"/>
+        <ul class="o_menu_systray" role="menu"/>
+    </nav>
+</header>
+
+<t t-name="Menu.link">
+    <t t-set="depth" t-value="(depth || 0) + 1"/>
+
+    <t t-if="!menu.children.length">
+        <t t-set="_link">
+            <a role="menuitem" t-attf-href="#menu_id=#{menu.id}&amp;action=#{menu.action ? menu.action.split(',')[1] : ''}"
+                t-att-data-menu="menu.id"
+                t-att-data-action-model="menu.action ? menu.action.split(',')[0] : ''"
+                t-att-data-action-id="menu.action ? menu.action.split(',')[1] : ''"
+                t-att-data-menu-xmlid="menu.xmlid"
+                t-attf-class="#{inNavbar ? '' : 'dropdown-item '}o_menu_entry_lvl_#{depth}"
+                data-toggle="collapse" data-target="#o_navbar_collapse.in">
+                <span><t t-esc="menu.name"/></span>
+            </a>
+        </t>
+        <li t-if="inNavbar">
+            <t t-raw="_link"/>
+        </li>
+        <t t-else="">
+            <t t-raw="_link"/>
+        </t>
+    </t>
+    <t t-else="">
+        <!-- Desktop case -->
+        <t t-if="!mobile">
+            <div t-attf-class="dropdown-header o_menu_header_lvl_#{depth}">
+                <span><t t-esc="menu.name"/></span>
+            </div>
+            <t t-foreach="menu.children" t-as="menu">
+                <t t-call="Menu.link"/>
+            </t>
+        </t>
+        <!-- Mobile case -->
+        <li t-else="" class="o_burger_menu_section">
+            <a href="#" t-attf-class="o_menu_entry_lvl_#{depth}" t-att-data-menu-xmlid="menu.xmlid" data-toggle="dropdown" role="button" aria-expanded="false">
+                <t t-esc="menu.name"/>
+                <span class="fa fa-chevron-right toggle_icon float-right"/>
+            </a>
+            <ul>
+                <t t-foreach="menu.children" t-as="menu">
+                    <t t-call="Menu.link"/>
+                </t>
+            </ul>
+        </li>
+    </t>
+</t>
+
+<!-- separate first level dropdown from the others to avoid nested dropdown -->
+<t t-name="Menu.sections">
+    <t t-foreach="menu_data.children" t-as="first_level_menu">
+        <section t-att-class="first_level_menu.id">
+            <t t-foreach="first_level_menu.children" t-as="second_level_menu">
+                <t t-if="!second_level_menu.children.length">
+                    <t t-call="Menu.link">
+                        <t t-set="inNavbar" t-value="true"/>
+                        <t t-set="menu" t-value="second_level_menu"/>
+                    </t>
+                </t>
+                <t t-else="">
+                    <li>
+                        <a href="#" class="dropdown-toggle o-no-caret o_menu_header_lvl_1" t-att-data-menu-xmlid="second_level_menu.xmlid" data-toggle="dropdown" role="button" aria-expanded="false">
+                            <t t-esc="second_level_menu.name"/>
+                        </a>
+                        <div class="dropdown-menu" role="menu">
+                            <t t-foreach="second_level_menu.children" t-as="third_level_menu">
+                                <t t-call="Menu.link">
+                                    <t t-set="depth" t-value="1"/>
+                                    <t t-set="menu" t-value="third_level_menu"/>
+                                </t>
+                            </t>
+                        </div>
+                    </li>
+                </t>
+            </t>
+        </section>
+    </t>
+</t>
+
+<t t-extend="res_config_edition">
+    <t t-jquery=".user-heading h3" t-operation="replace">
+        <h3>
+            CpaBooks <t t-esc="widget.server_version"/> (Enterprise Edition)
+        </h3>
+    </t>
+    <t t-jquery="#license" t-operation="replace">
+        <a id="license" target="_blank" href="https://github.com/odoo/enterprise/blob/13.0/LICENSE" style="text-decoration: underline;">CpaBooks Enterprise Edition License V1.0</a>
+    </t>
+    <t t-jquery=".user-heading h3" t-operation="after">
+        <t t-set="expiration_date" t-value="widget.expiration_date ? moment(widget.expiration_date).format('LL') : null"/>
+
+    </t>
+</t>
+
+<t t-extend="UserMenu.shortcuts">
+    <t t-jquery="tr:last" t-operation="after">
+        <tr>
+            <td align="left">Toggle home menu</td>
+            <td>
+                <span class="o_key">Alt</span> + <span class="o_key">h</span>
+            </td>
+            <td>
+                <span class="o_key">Control</span> + <span class="o_key">Alt</span> + <span class="o_key">h</span>
+            </td>
+        </tr>
+    </t>
+</t>
+
+</templates>

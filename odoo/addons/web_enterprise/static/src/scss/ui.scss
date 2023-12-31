@@ -1,0 +1,7 @@
+// Shared with web client and login screen
+
+.o_home_menu_background {
+    background: url(/web_enterprise/static/src/img/home-menu-bg-overlay.svg),
+        linear-gradient(to right bottom, #000000, #050505);
+    background-size: cover;
+}
